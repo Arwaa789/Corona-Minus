@@ -1,0 +1,149 @@
+import turtle
+import math
+window = turtle.Screen()
+window.bgcolor('black')
+window.title("Corona Minus")
+window.setup(700,700)
+
+class Pen(turtle.Turtle):
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        self.shape("square")
+        self.color("white")
+        self.penup() #usually pen is down becuase it writes we dont want that so pen up
+        self.speed(0)
+#Haania's part start
+class Player(turtle.Turtle):
+    def __init__(self):
+        turtle.Turtle.__init__(self)
+        self.shape("square")
+        self.color("blue")
+        self.penup() #usually pen is down becuase it writes we dont want that so pen up
+        self.speed(0)
+        self.gold = 0
+# i added P in maze whixh represents a player
+#Haania's part ended
+    def go_up(self):
+        if (self.xcor(), self.ycor()+24) not in walls:
+            self.goto(self.xcor(), self.ycor() +24)#When you go up x coordinate doesnt change but y gets +24 pixels 
+    def go_down(self): #similar explaination for others
+        if (self.xcor(), self.ycor()-24) not in walls:
+            self.goto(self.xcor(), self.ycor()-24)
+    def go_left(self):
+        if (self.xcor()-24, self.ycor()) not in walls:
+            self.goto(self.xcor() -24 , self.ycor())
+    def go_right(self):
+        if (self.xcor()+24, self.ycor()) not in walls:
+            self.goto(self.xcor() +24 , self.ycor())
+    #to check if player collides with treasure or any object
+    def is_collision(self, something):
+        a = self.xcor()-something.xcor()
+        b = self.ycor()-something.ycor()
+        #checking the distance to see if they are colse enough to consider a collision
+        distance = math.sqrt((a**2) + (b**2))
+        if distance<5:
+            return True
+        if distance>5:
+            return False
+#lets make the treasure!
+class Treasure(turtle.Turtle):
+    def __init__(self, x, y):
+        turtle.Turtle.__init__(self)
+        self.shape("circle")
+        self.color("gold")
+        self.penup()
+        self.speed(0)
+        self.gold = 100
+        self.goto(x,y)
+    def destroy(self):
+        self.goto(2000,2000)
+        self.hideturtle()
+        
+#this is the list for levels. we are keeping the first element of the list as empty list so that is id easier. if we call level[1] we gett the first level
+levels=[""]
+#this is our first level
+level_1 =[
+"XXXXXXXXXXXXXXXXXXXXXXXXX",
+"XP  XXXXXXX          XXXX", 
+"X  XXXXXXX  XXXXXX  XXXXX",
+"X       XX  XXXXXX  XXXXX",
+"X       XX  XXX        XX",
+"XXXXXX  XX  XXX        XX",
+"XXXXXX  XX  XXXXXX  XXXXX",
+"XXXXXX  XX    XXXX  XXXXX",
+"X  XXX        XXXXT  XXXX",
+"X  XXX  XXXXXXXXXXXXXXXXX",
+"X         XXXXXXXXXXXXXXX",
+"X                XXXXXXXX",
+"XXXXXXXXXXXX     XXXXX  X",
+"XXXXXXXXXXXXXXX  XXXXX  X",
+"XXX  XXXXXXXXXX         X",
+"XXX                     X",
+"XXX         XXXXXXXXXXXXX",
+"XXXXXXXXXX  XXXXXXXXXXXXX",
+"XXXXXXXXXX              X",
+"XX  XXXXXX              X",
+"XX  XXXXXXXXXXXXXX  XXXXX",
+"XX   XXXXXXXXXXXXX  XXXXX",
+"XX          XXXX        X",
+"XXXX                    X",
+"XXXXXXXXXXXXXXXXXXXXXXXXX"
+]
+#add a treasures list
+treasures = []
+
+levels.append(level_1)
+
+#create function that sets up the maze for a particular level
+def setup_maze(level):
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            #now we will get the character at each x,y coordinate
+            character=level[y][x] 
+            #we will calculate the screens x,y coordinate for this coordinates
+            #note that the screen starts from 0,0 and our maze is 600 by 600 so the right most coordinate will be -288,288 because each box is of size 24.
+            screen_x = -288 + (x*24)
+            screen_y = 288 - (y*24)
+            #checking if it is an X(which represents that there we need to place a brick for wall)
+            if character == "X":
+                pen.goto(screen_x, screen_y)
+                pen.stamp()
+                #add coordinates to walls list
+                walls.append((screen_x, screen_y))
+            if character == "P":
+                player.goto(screen_x,screen_y)
+            #check if it is a treasure T
+            if character == "T":
+                treasures.append(Treasure(screen_x, screen_y))
+                
+            
+#we are creating class instances. so if we use pen it calls the class Pen
+pen = Pen()
+player=Player()
+#create a list of coordinates that has a wall
+walls = []
+#call the function to set op maxe for respective level
+setup_maze(levels[1])
+
+#The functions that we created for up/down/left/right now we need to call it on key i.e. Keyboard Binding
+turtle.listen() 
+turtle.onkey(player.go_left, "Left") #Quotations show the arrow key on keyboard 
+turtle.onkey(player.go_right, "Right")
+turtle.onkey(player.go_down, "Down")
+turtle.onkey(player.go_up, "Up")
+
+#turns off screen updates
+window.tracer(0)
+
+
+#main game loop so that it keeps running
+while True:
+    #check for collision with treasure.we will iterate through treasure list for all the treasure
+    for treasure in treasures:
+        if player.is_collision(treasure):
+            player.gold += treasure.gold
+            print("Player Gold: {}".format(player.gold))
+            treasure.destroy()
+            treasures.remove(treasure)
+    #Update screen
+    window.update()
